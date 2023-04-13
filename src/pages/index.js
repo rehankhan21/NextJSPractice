@@ -44,9 +44,11 @@ export async function getStaticProps() {
   const jsonData = await fs.readFile(filepath);
   const data = JSON.parse(jsonData);
 
+  // revalidate tells nextjs that after x amount of time the page should be regenerated
   return {
     props: {
       products: data.products,
     },
+    revalidate: 10,
   };
 }
