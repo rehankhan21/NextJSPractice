@@ -36,13 +36,26 @@ export default function Home(props) {
 
 // executes this func first to get the data for the above component.
 // must always return an object with a props key
-export async function getStaticProps() {
+export async function getStaticProps(context) {
   // this now returns a promise with the data
   // process.cwd gives you the current working directory
   // process.cwd is the working directory then we add arguments to dive deeper into folders
   const filepath = path.join(process.cwd(), "data", "dummy-backend.json");
   const jsonData = await fs.readFile(filepath);
   const data = JSON.parse(jsonData);
+
+  if (!data) {
+    return {
+      redirect: {
+        destination: "/no-data",
+      },
+    };
+  }
+
+  if (data.products.length === 0) {
+    // not found gives you a 404 page
+    return { notFound: true };
+  }
 
   // revalidate tells nextjs that after x amount of time the page should be regenerated
   return {
