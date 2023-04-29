@@ -5,12 +5,25 @@ import path from "path";
 function ProductDetailPage(props) {
   const { loadedProduct } = props;
 
+  // fallback content
+  if (!loadedProduct) {
+    return <p>...loading</p>;
+  }
+
   return (
     <Fragment>
       <h1>{loadedProduct.title}</h1>
       <p>{loadedProduct.description}</p>
     </Fragment>
   );
+}
+
+async function getData() {
+  const filepath = path.join(process.cwd(), "data", "dummy-backend.json");
+  const jsonData = await fs.readFile(filepath);
+  const data = JSON.parse(jsonData);
+
+  return data;
 }
 
 export async function getStaticProps(context) {
@@ -20,11 +33,13 @@ export async function getStaticProps(context) {
   // similar to useRouter and getting the params from router.query
   const productId = params.pid;
 
-  const filepath = path.join(process.cwd(), "data", "dummy-backend.json");
-  const jsonData = await fs.readFile(filepath);
-  const data = JSON.parse(jsonData);
+  const data = await getData();
 
   const product = data.products.find((product) => product.id === productId);
+
+  if (!product) {
+    return { notFound: true };
+  }
 
   return {
     props: {
@@ -35,13 +50,20 @@ export async function getStaticProps(context) {
 
 // this tells nextjs which instance of the dynamic path we use generate
 export async function getStaticPaths() {
+  const data = await getData();
+
+  const ids = data.products.map((product) => product.id);
+
+  const pathsWithParams = ids.map((id) => ({ params: { pid: id } }));
+
   return {
-    paths: [
-      { params: { pid: "p1" } },
-      { params: { pid: "p2" } },
-      { params: { pid: "p3" } },
-    ],
-    fallback: false,
+    paths: pathsWithParams,
+    // pregenerating all the pages is not optimal
+    // set to true and decide to only pregenerate some pages
+    // only generates pages when needed, unless specified above
+    // when using fallback we need to make sure to use a fallback state
+    // can set fallback to 'blocking', this makes it so you dont need fallback state
+    fallback: true,
   };
 }
 
