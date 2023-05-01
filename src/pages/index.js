@@ -3,14 +3,45 @@
 // nextjs specific imports
 import fs from "fs/promises";
 import path from "path";
+import { useRef, useState } from "react";
 
 // this makes it so we dont send a new request to the backend when we want to link to pages
 // we remain in the same react app.
 import Link from "next/link";
 
 export default function Home(props) {
+  const [feedbackItems, setFeedbackItems] = useState([]);
+
   // now we can expect to get a products key from our props
   const { products } = props;
+
+  const emailInputRef = useRef();
+  const feedbackInputRef = useRef();
+
+  function submitFormHandler(event) {
+    event.preventDefault();
+
+    const enteredEmail = emailInputRef.current.value;
+    const enteredFeedback = feedbackInputRef.current.value;
+
+    const reqBody = { email: enteredEmail, text: enteredFeedback };
+
+    fetch("/api/feedback", {
+      method: "POST",
+      body: JSON.stringify(reqBody),
+      headers: {
+        "Content-Type": "application/json",
+      },
+    })
+      .then((response) => response.json())
+      .then((data) => console.log(data));
+  }
+
+  function loadFeedbackHandler() {
+    fetch("/api/feedback")
+      .then((response) => response.json())
+      .then((data) => setFeedbackItems(data.feedback));
+  }
 
   return (
     <div>
@@ -30,6 +61,24 @@ export default function Home(props) {
           <li key={product.id}>
             <Link href={`/products/${product.id}`}>{product.title}</Link>
           </li>
+        ))}
+      </ul>
+
+      <form onSubmit={submitFormHandler}>
+        <div>
+          <label htmlFor="email">Your Email Address</label>
+          <input type="email" id="email" ref={emailInputRef} />
+        </div>
+        <div>
+          <label htmlFor="feedback">Your Feedback</label>
+          <textarea id="feedback" rows="5" ref={feedbackInputRef}></textarea>
+        </div>
+        <button>Send Feedback</button>
+      </form>
+      <button onClick={loadFeedbackHandler}>Load Feedback</button>
+      <ul>
+        {feedbackItems.map((item) => (
+          <li key={item.id}>{item.text}</li>
         ))}
       </ul>
     </div>

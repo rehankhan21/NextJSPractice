@@ -80,7 +80,7 @@ function LastSalesPage(props) {
   );
 }
 
-// cant user hooks in getStaticProps
+// cant use hooks in getStaticProps
 export async function getStaticProps() {
   //   return fetch(
   //     "https://nextevents-8aaf1-default-rtdb.firebaseio.com/sales.json"
